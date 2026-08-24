@@ -7,12 +7,26 @@ const cors = require("cors");
 const axios = require("axios");
 const { App } = require("octokit");
 
-const githubApp = new App({
-  appId: Number(process.env.GITHUB_APP_ID),
-  privateKey: fs.readFileSync(
+let privateKey;
+
+if (process.env.GITHUB_PRIVATE_KEY) {
+  // Production: private key stored directly in environment variables
+  privateKey = process.env.GITHUB_PRIVATE_KEY.replace(/\\n/g, "\n");
+} else if (process.env.GITHUB_PRIVATE_KEY_PATH) {
+  // Local development: read private key from file
+  privateKey = fs.readFileSync(
     path.resolve(process.env.GITHUB_PRIVATE_KEY_PATH),
     "utf8"
-  )
+  );
+} else {
+  throw new Error(
+    "GitHub private key is not configured."
+  );
+}
+
+const githubApp = new App({
+  appId: Number(process.env.GITHUB_APP_ID),
+  privateKey
 });
 
 const app = express();
